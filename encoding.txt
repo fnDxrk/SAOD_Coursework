@@ -1,0 +1,2 @@
+./main | iconv -f cp866 | iconv -t UTF-8
+
