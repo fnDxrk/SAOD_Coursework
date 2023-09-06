@@ -1,12 +1,8 @@
 #include <fstream>
 #include <iostream>
 #include <stdio.h>
-#include <termios.h>
+#include <conio.h>
 #include <unistd.h>
-#include <iconv.h>
-
-// Структура терминалов
-struct termios oldt, newt;
 
 // Структура записи БД
 struct record {
@@ -21,17 +17,17 @@ struct record {
 void printStartLine()
 {
     std::cout << "\tFull Name"
-              << "\t\t   "
+              << "\t\t\t   "
               << "Street"
-              << "\t"
+              << "\t  "
               << "Number of house"
-              << "\t\t"
+              << "\t"
               << "Number of apartment"
               << "\t    "
               << "Settlement date" << std::endl;
 }
 
-// Вывод базы даннных
+// Вывод базы данных
 void printRecord(record* &locality, int& currentPage)
 {
     for (int i = currentPage * 20; i < currentPage * 20 + 20; i++) {
@@ -59,51 +55,80 @@ void printMenu()
               << "<l> : Next page" << std::endl;
 }
 
-// Функция считывания клавиш
-void readKey(int& key)
-{
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    key = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-}
 
-// Функция проверки нажатой клавиши
-void checkKey(int& key, int& currentPage)
-{
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
+// void readKey(int &key) {
+//     key = getchar();
+// }
+
+void checkKey(char& key, int& currentPage) {
+    key = getch();
     switch (key) {
-    case 'q':
-        std::cout << "Close" << std::endl;
-        exit(0);
-    case 'h':
-        currentPage--;
-        if (currentPage < 0) {
-            std::cout << "Error!" << std::endl;
-            sleep(2);
-            currentPage = 0;
-        }
-        break;
-    case 'l':
-        currentPage++;
-        if (currentPage > 199) {
-            std::cout << "This is end!" << std::endl;
-            sleep(2);
-            currentPage = 199;
-        }
-        break;
-    }
+        case 'q':
+            std::cout << "Close" << std::endl;
+            exit(0);
+        case 'h':
+            currentPage--;
+            if (currentPage < 0) {
+                std::cout << "Error!" << std::endl;
+                sleep(2);
+                currentPage = 0;
+            }
+            break;
+        case 'l':
+            currentPage++;
+            if (currentPage > 199) {
+                std::cout << "This is end!" << std::endl;
+                sleep(2);
+                currentPage = 199;
+            }
+            break;
+        }  
 }
+// // Функция считывания клавиш
+// void readKey(int& key)
+// {
+//     tcgetattr(STDIN_FILENO, &oldt);
+//     newt = oldt;
+//     newt.c_lflag &= ~(ICANON | ECHO);
+//     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+//     key = getchar();
+//     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+// }
+
+// // Функция проверки нажатой клавиши
+// void checkKey(int& key, int& currentPage)
+// {
+//     tcgetattr(STDIN_FILENO, &oldt);
+//     newt = oldt;
+//     switch (key) {
+//     case 'q':
+//         std::cout << "Close" << std::endl;
+//         exit(0);
+//     case 'h':
+//         currentPage--;
+//         if (currentPage < 0) {
+//             std::cout << "Error!" << std::endl;
+//             sleep(2);
+//             currentPage = 0;
+//         }
+//         break;
+//     case 'l':
+//         currentPage++;
+//         if (currentPage > 199) {
+//             std::cout << "This is end!" << std::endl;
+//             sleep(2);
+//             currentPage = 199;
+//         }
+//         break;
+//     }
+// }
 
 int main()
 {
     record* locality = new record[4000];
 
     int currentPage = 0;
-    int key;
+    char key;
 
     // Чтение файла
     std::ifstream fileDateBase("testBase4.dat", std::ios::binary);
@@ -121,9 +146,10 @@ int main()
         printStartLine();
         printRecord(locality, currentPage);
         printMenu();
-        readKey(key);
+        //readKey(key);
         checkKey(key, currentPage);
-        system("clear");
+        //system("clear");
+        system("cls");
     }
 
     fileDateBase.close();
