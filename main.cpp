@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <math.h>
 #include <stdio.h>
 #include <conio.h>
 #include <unistd.h>
@@ -51,77 +52,50 @@ void printMenu()
     std::cout << "<q> : Quit programs"
               << "\t\t"
               << "<h> : Last page"
+              << "\t\t\t"
+              << "<l> : Next page" 
+              << std::endl
+              << "<r> : Search record"
               << "\t\t"
-              << "<l> : Next page" << std::endl;
+              << "<j> : Last 10 page"
+              << "\t\t"
+              << "<k> : Next 10 page" 
+              << std::endl;
 }
-
-
-// void readKey(int &key) {
-//     key = getchar();
-// }
 
 void checkKey(char& key, int& currentPage) {
     key = getch();
     switch (key) {
-        case 'q':
-            std::cout << "Close" << std::endl;
+        case 'q':;
             exit(0);
         case 'h':
             currentPage--;
-            if (currentPage < 0) {
-                std::cout << "Error!" << std::endl;
-                sleep(2);
-                currentPage = 0;
-            }
+            if (currentPage < 0) currentPage = 0;
             break;
         case 'l':
             currentPage++;
-            if (currentPage > 199) {
-                std::cout << "This is end!" << std::endl;
-                sleep(2);
-                currentPage = 199;
-            }
+            if (currentPage > 199) currentPage = 199;
             break;
-        }  
+        case 'r' :
+            int numberPage;
+            std::cout << "Enter the record : ";
+            std::cin >> numberPage;
+            if (numberPage > 0 && numberPage < 4000) currentPage = floor((numberPage - 1) / 20);
+            else {
+                std::cout << "Error!" << std::endl;
+                sleep(1);
+            } 
+            break;
+        case 'j' :
+            currentPage -= 10; 
+            if (currentPage < 0) currentPage = 0;
+            break;
+        case 'k' :
+            currentPage += 10; 
+            if (currentPage > 199) currentPage = 199;
+            break;
+    }  
 }
-// // Функция считывания клавиш
-// void readKey(int& key)
-// {
-//     tcgetattr(STDIN_FILENO, &oldt);
-//     newt = oldt;
-//     newt.c_lflag &= ~(ICANON | ECHO);
-//     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-//     key = getchar();
-//     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-// }
-
-// // Функция проверки нажатой клавиши
-// void checkKey(int& key, int& currentPage)
-// {
-//     tcgetattr(STDIN_FILENO, &oldt);
-//     newt = oldt;
-//     switch (key) {
-//     case 'q':
-//         std::cout << "Close" << std::endl;
-//         exit(0);
-//     case 'h':
-//         currentPage--;
-//         if (currentPage < 0) {
-//             std::cout << "Error!" << std::endl;
-//             sleep(2);
-//             currentPage = 0;
-//         }
-//         break;
-//     case 'l':
-//         currentPage++;
-//         if (currentPage > 199) {
-//             std::cout << "This is end!" << std::endl;
-//             sleep(2);
-//             currentPage = 199;
-//         }
-//         break;
-//     }
-// }
 
 int main()
 {
@@ -146,9 +120,7 @@ int main()
         printStartLine();
         printRecord(locality, currentPage);
         printMenu();
-        //readKey(key);
         checkKey(key, currentPage);
-        //system("clear");
         system("cls");
     }
 
