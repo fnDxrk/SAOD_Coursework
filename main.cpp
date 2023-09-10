@@ -8,6 +8,7 @@
 
 int sizeLocality = 4000;
 
+
 // Структура записи БД
 struct record {
     char fullname[32];
@@ -18,16 +19,16 @@ struct record {
 };
 
 //Пирамидальная сортировка
-void heapify(record* arr, int* indexArr, int size, int i)
+void heapify(record* arr, record** indexArr, int size, int i)
 {
     int largest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
 
-    if (left < size && strcmp(arr[indexArr[left]].street, arr[indexArr[largest]].street) > 0) 
+    if (left < size && strcmp(indexArr[left]->street, indexArr[largest]->street) > 0) 
         largest = left;
 
-    if (right < size && strcmp(arr[indexArr[right]].street, arr[indexArr[largest]].street) > 0)
+    if (right < size && strcmp(indexArr[right]->street, indexArr[largest]->street) > 0)
         largest = right;
 
     if (largest != i) {
@@ -36,7 +37,7 @@ void heapify(record* arr, int* indexArr, int size, int i)
     }
 }
 
-void heapSort(record* arr, int* indexArr, int size)
+void heapSort(record* arr, record** indexArr, int size)
 {
     for (int i = size / 2 - 1; i >= 0; i--)
     heapify(arr, indexArr, size, i);
@@ -62,19 +63,38 @@ void printStartLine()
 }
 
 // Вывод базы данных
-void printRecord(record* &locality, int* indexArr, int& currentPage)
+void printRecord(record* locality, int& currentPage)
 {
     for (int i = currentPage * 20; i < currentPage * 20 + 20; i++) {
         std::cout << i + 1
                   << ". "
-                  << locality[indexArr[i]].fullname
+                  << locality[i].fullname
                   << "\t"
-                  << locality[indexArr[i]].street
-                  << "\t" << locality[indexArr[i]].numberHouse
+                  << locality[i].street
+                  << "\t" << locality[i].numberHouse
                   << "\t\t\t"
-                  << locality[indexArr[i]].numberApartment
+                  << locality[i].numberApartment
                   << "\t\t\t"
-                  << locality[indexArr[i]].dateSettle << std::endl;
+                  << locality[i].dateSettle << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+// Вывод сортированной базы данных
+void printSortRecord(record** indexArr, int& currentPage)
+{
+    for (int i = currentPage * 20; i < currentPage * 20 + 20; i++) {
+        std::cout << i + 1
+                  << ". "
+                  << indexArr[i]->fullname
+                  << "\t"
+                  << indexArr[i]->street
+                  << "\t" 
+                  << indexArr[i]->numberHouse
+                  << "\t\t\t"
+                  << indexArr[i]->numberApartment
+                  << "\t\t\t"
+                  << indexArr[i]->dateSettle << std::endl;
     }
     std::cout << std::endl;
 }
@@ -94,11 +114,13 @@ void printMenu()
               << "\t\t"
               << "<k> : Next 10 page" 
               << std::endl
+              << "<d> : Default record"
+              << "\t\t"
               << "<s> : Sort"
               << std::endl;
 }
 
-void checkKey(char& key, int& currentPage, record* locality, int* indexArr) {
+void checkKey(char& key, int& currentPage, record* locality, record** indexArr, int &keySort) {
     key = getch();
     switch (key) {
         case 'q':;
@@ -129,8 +151,13 @@ void checkKey(char& key, int& currentPage, record* locality, int* indexArr) {
             currentPage += 10; 
             if (currentPage > 199) currentPage = 199;
             break;
+        case 'd' :
+            keySort = 0;
+            break;
         case 's' :
+            keySort = 1;
             heapSort(locality, indexArr, sizeLocality);
+            break;
     }  
 }
 
@@ -139,12 +166,13 @@ int main()
     //Динамический массив для записей БД
     record* locality = new record[sizeLocality];
     //Массив указателей
-    int* indexArr = new int[sizeLocality];
+    record** indexArr = new record*[sizeLocality];
     for (int i = 0; i < sizeLocality; i++) {
-        indexArr[i] = i;
+        indexArr[i] = &locality[i];
     }
 
     int currentPage = 0;
+    int keySort = 0;
     char key;
 
     // Чтение файла
@@ -161,9 +189,10 @@ int main()
 
     while(true) {
         printStartLine();
-        printRecord(locality, indexArr, currentPage);
+        if (keySort == 0) printRecord(locality, currentPage);
+        if (keySort == 1) printSortRecord(indexArr, currentPage);
         printMenu();
-        checkKey(key, currentPage, locality, indexArr);
+        checkKey(key, currentPage, locality, indexArr, keySort);
         system("cls");
     }
 
