@@ -6,6 +6,8 @@
 #include <conio.h>
 #include <unistd.h>
 
+int sizeLocality = 4000;
+
 // Структура записи БД
 struct record {
     char fullname[32];
@@ -16,32 +18,32 @@ struct record {
 };
 
 //Пирамидальная сортировка
-void heapify(record* arr, int size, int i)
+void heapify(record* arr, int* indexArr, int size, int i)
 {
     int largest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
 
-    if (left < size && strcmp(arr[left].street, arr[largest].street) > 0)
+    if (left < size && strcmp(arr[indexArr[left]].street, arr[indexArr[largest]].street) > 0) 
         largest = left;
 
-    if (right < size && strcmp(arr[right].street, arr[largest].street) > 0)
+    if (right < size && strcmp(arr[indexArr[right]].street, arr[indexArr[largest]].street) > 0)
         largest = right;
 
     if (largest != i) {
-        std::swap(arr[i], arr[largest]);
-        heapify(arr, size, largest);
+        std::swap(indexArr[i], indexArr[largest]);
+        heapify(arr, indexArr, size, largest);
     }
 }
 
-void heapSort(record* arr, int size)
+void heapSort(record* arr, int* indexArr, int size)
 {
     for (int i = size / 2 - 1; i >= 0; i--)
-        heapify(arr, size, i);
+    heapify(arr, indexArr, size, i);
 
     for (int i = size - 1; i >= 0; i--) {
-        std::swap(arr[0], arr[i]);
-        heapify(arr, i, 0);
+        std::swap(indexArr[0], indexArr[i]);
+        heapify(arr, indexArr, i, 0);
     }
 }
 
@@ -60,19 +62,19 @@ void printStartLine()
 }
 
 // Вывод базы данных
-void printRecord(record* &locality, int& currentPage)
+void printRecord(record* &locality, int* indexArr, int& currentPage)
 {
     for (int i = currentPage * 20; i < currentPage * 20 + 20; i++) {
         std::cout << i + 1
                   << ". "
-                  << locality[i].fullname
+                  << locality[indexArr[i]].fullname
                   << "\t"
-                  << locality[i].street
-                  << "\t" << locality[i].numberHouse
+                  << locality[indexArr[i]].street
+                  << "\t" << locality[indexArr[i]].numberHouse
                   << "\t\t\t"
-                  << locality[i].numberApartment
+                  << locality[indexArr[i]].numberApartment
                   << "\t\t\t"
-                  << locality[i].dateSettle << std::endl;
+                  << locality[indexArr[i]].dateSettle << std::endl;
     }
     std::cout << std::endl;
 }
@@ -96,7 +98,7 @@ void printMenu()
               << std::endl;
 }
 
-void checkKey(char& key, int& currentPage, record* locality) {
+void checkKey(char& key, int& currentPage, record* locality, int* indexArr) {
     key = getch();
     switch (key) {
         case 'q':;
@@ -128,14 +130,19 @@ void checkKey(char& key, int& currentPage, record* locality) {
             if (currentPage > 199) currentPage = 199;
             break;
         case 's' :
-            heapSort(locality, 4000);
+            heapSort(locality, indexArr, sizeLocality);
     }  
 }
 
 int main()
 {
-    record* locality = new record[4000];
-    //int sizeLocality = 4000;
+    //Динамический массив для записей БД
+    record* locality = new record[sizeLocality];
+    //Массив указателей
+    int* indexArr = new int[sizeLocality];
+    for (int i = 0; i < sizeLocality; i++) {
+        indexArr[i] = i;
+    }
 
     int currentPage = 0;
     char key;
@@ -154,9 +161,9 @@ int main()
 
     while(true) {
         printStartLine();
-        printRecord(locality, currentPage);
+        printRecord(locality, indexArr, currentPage);
         printMenu();
-        checkKey(key, currentPage, locality);
+        checkKey(key, currentPage, locality, indexArr);
         system("cls");
     }
 
