@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 int sizeLocality = 4000;
+int keySort = 0;
 
 
 // Структура записи БД
@@ -120,7 +121,7 @@ void printMenu()
               << std::endl;
 }
 
-void checkKey(char& key, int& currentPage, record* locality, record** indexArr, int &keySort) {
+void checkKey(char& key, int& currentPage, record* locality, record** indexArr) {
     key = getch();
     switch (key) {
         case 'q':;
@@ -172,7 +173,6 @@ int main()
     }
 
     int currentPage = 0;
-    int keySort = 0;
     char key;
 
     // Чтение файла
@@ -192,7 +192,7 @@ int main()
         if (keySort == 0) printRecord(locality, currentPage);
         if (keySort == 1) printSortRecord(indexArr, currentPage);
         printMenu();
-        checkKey(key, currentPage, locality, indexArr, keySort);
+        checkKey(key, currentPage, locality, indexArr);
         system("cls");
     }
 
