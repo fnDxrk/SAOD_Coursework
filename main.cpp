@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <cstring>
 #include <math.h>
 #include <stdio.h>
 #include <conio.h>
@@ -13,6 +14,36 @@ struct record {
     short int numberApartment;
     char dateSettle[10];
 };
+
+//Пирамидальная сортировка
+void heapify(record* arr, int size, int i)
+{
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < size && strcmp(arr[left].street, arr[largest].street) > 0)
+        largest = left;
+
+    if (right < size && strcmp(arr[right].street, arr[largest].street) > 0)
+        largest = right;
+
+    if (largest != i) {
+        std::swap(arr[i], arr[largest]);
+        heapify(arr, size, largest);
+    }
+}
+
+void heapSort(record* arr, int size)
+{
+    for (int i = size / 2 - 1; i >= 0; i--)
+        heapify(arr, size, i);
+
+    for (int i = size - 1; i >= 0; i--) {
+        std::swap(arr[0], arr[i]);
+        heapify(arr, i, 0);
+    }
+}
 
 // Вывод начальной линии
 void printStartLine()
@@ -60,10 +91,12 @@ void printMenu()
               << "<j> : Last 10 page"
               << "\t\t"
               << "<k> : Next 10 page" 
+              << std::endl
+              << "<s> : Sort"
               << std::endl;
 }
 
-void checkKey(char& key, int& currentPage) {
+void checkKey(char& key, int& currentPage, record* locality) {
     key = getch();
     switch (key) {
         case 'q':;
@@ -94,12 +127,15 @@ void checkKey(char& key, int& currentPage) {
             currentPage += 10; 
             if (currentPage > 199) currentPage = 199;
             break;
+        case 's' :
+            heapSort(locality, 4000);
     }  
 }
 
 int main()
 {
     record* locality = new record[4000];
+    //int sizeLocality = 4000;
 
     int currentPage = 0;
     char key;
@@ -120,7 +156,7 @@ int main()
         printStartLine();
         printRecord(locality, currentPage);
         printMenu();
-        checkKey(key, currentPage);
+        checkKey(key, currentPage, locality);
         system("cls");
     }
 
