@@ -26,10 +26,14 @@ void heapify(record* arr, record** indexArr, int size, int i)
     int left = 2 * i + 1;
     int right = 2 * i + 2;
 
-    if (left < size && strcmp(indexArr[left]->street, indexArr[largest]->street) > 0) 
+    if (left < size && (strcmp(indexArr[left]->street, indexArr[largest]->street) > 0 
+        || (strcmp(indexArr[left]->street, indexArr[largest]->street) == 0 
+        && indexArr[left]->numberHouse > indexArr[largest]->numberHouse))) 
         largest = left;
 
-    if (right < size && strcmp(indexArr[right]->street, indexArr[largest]->street) > 0)
+    if (right < size && (strcmp(indexArr[right]->street, indexArr[largest]->street) > 0 
+        || (strcmp(indexArr[right]->street, indexArr[largest]->street) == 0 
+        && indexArr[right]->numberHouse > indexArr[largest]->numberHouse)))
         largest = right;
 
     if (largest != i) {
