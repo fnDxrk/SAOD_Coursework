@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <cstring>
-#include <math.h>
+#include <cmath>
 #include <stdio.h>
 #include <conio.h>
 #include <unistd.h>
@@ -16,32 +16,127 @@ struct record {
     char dateSettle[10];
 };
 
-// â•”â•â•â•¦â•â•â•—
-// â•‘  â•‘  â•‘
-// â• â•â•â•¬â•â•â•£
-// â•‘  â•‘  â•‘
-// â•šâ•â•â•©â•â•â•
+// ÉÍÍËÍÍ»
+// º  º  º
+// ÌÍÍÎÍÍ¹
+// º  º  º
+// ÈÍÍÊÍÍ¼
 
-//Ğ’Ñ‹Ğ²Ğ¾Ğ´ Ğ¼ĞµĞ½Ñ
-void printMenu() {
-    cout << "â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—"
-         << "\n"
-         << "â•‘                             ĞœĞµĞ½Ñ                             â•‘"
-         << "\n"
-         << "â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£"
-         << "\n"
-         << "â•‘  1. ĞŸĞ¾ÑĞ¼Ğ¾Ñ‚Ñ€ĞµÑ‚ÑŒ Ğ±Ğ°Ğ·Ñƒ Ğ´Ğ°Ğ½Ğ½Ñ‹Ñ…                                   â•‘"
-         << "\n"
-         << "â•‘  2. ĞŸĞ¾ÑĞ¼Ğ¾Ñ‚Ñ€ĞµÑ‚ÑŒ Ğ¾Ñ‚ÑĞ¾Ñ€Ñ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ½ÑƒÑ Ğ±Ğ°Ğ·Ñƒ Ğ´Ğ°Ğ½Ğ½Ñ‹Ñ…                   â•‘"
-         << "\n"
-         << "â•‘  3. ĞŸĞ¾Ğ¸ÑĞº Ğ¿Ğ¾ ĞºĞ»ÑÑ‡Ñƒ                                           â•‘"
-         << "\n"
-         << "â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•"
-         << "\n\n"
-         << ">>> ";
+// ‘âàãªâãà  ã§« 
+struct node {
+    record* data;
+    node* next;
+};
+
+// ‘âàãªâãà  ®ç¥à¥¤¨
+struct MyQueue {
+    node* head;
+    node* tail;
+
+    MyQueue() : head(nullptr), tail(nullptr) {}
+
+    void push(record* data) {
+        node* newNode = new node;
+        newNode->data = data;
+        newNode->next = nullptr;
+
+        if (!head) {
+            head = newNode;
+            tail = newNode;
+        } else {
+            tail->next = newNode;
+            tail = newNode;
+        }
+    }
+
+    bool empty() const {
+        return !head;
+    }
+
+    record* front() const {
+        if (head) {
+            return head->data;
+        }
+        throw runtime_error("Queue is empty");
+    }
+
+    void pop() {
+        if (head) {
+            node* temp = head;
+            head = head->next;
+            delete temp;
+        }
+    }
+    
+    int size() const {
+        int count = 0;
+        node* current = head;
+        while (current) {
+            count++;
+            current = current->next;
+        }
+        return count;
+    }
+};
+
+// ëáâàë© ¯®¨áª ¯® ª«îçã
+MyQueue BinarySearch(record** indexArr, const string& targetKey) {
+    MyQueue result; // ç¥à¥¤ì ¤«ï åà ­¥­¨ï § ¯¨á¥© á ®¤¨­ ª®¢ë¬ ª«îç®¬
+
+    int arrSize = 4000;
+    int left = 0;
+    int right = arrSize - 1;
+
+    while (left <= right) {
+        int mid = (left + right) / 2;
+        
+        // ˆ§¢«¥ª ¥¬ ª«îç ¨§ ä ¬¨«¨¨
+        string key(indexArr[mid]->fullname, 3);
+
+        if (key == targetKey) {
+            // …á«¨ ª«îç á®¢¯ ¤ ¥â, ¤®¡ ¢«ï¥¬ § ¯¨áì ¢ ®ç¥à¥¤ì
+            result.push(indexArr[mid]);
+            
+            // ®¨áª ¢á¥å § ¯¨á¥© á â ª¨¬ ¦¥ ª«îç®¬ ¢«¥¢®
+            int leftIndex = mid - 1; // ˆ§¬¥­¥­® §­ ç¥­¨¥
+            while (leftIndex >= 0 && strncmp(indexArr[leftIndex]->fullname, targetKey.c_str(), 3) == 0) { // ˆá¯à ¢«¥­® áà ¢­¥­¨¥
+                result.push(indexArr[leftIndex]);
+                leftIndex--;
+            }
+            
+            // ®¨áª ¢á¥å § ¯¨á¥© á â ª¨¬ ¦¥ ª«îç®¬ ¢¯à ¢®
+            int rightIndex = mid + 1; // ˆ§¬¥­¥­® §­ ç¥­¨¥
+            while (rightIndex < arrSize && strncmp(indexArr[rightIndex]->fullname, targetKey.c_str(), 3) == 0) { // ˆá¯à ¢«¥­® áà ¢­¥­¨¥
+                result.push(indexArr[rightIndex]);
+                rightIndex++;
+            }
+            
+            return result;
+        } else if (key < targetKey) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+
+    return result;
 }
 
-//ĞŸĞ¸Ñ€Ğ°Ğ¼Ğ¸Ğ´Ğ°Ğ»ÑŒĞ½Ğ°Ñ ÑĞ¾Ñ€Ñ‚Ğ¸Ñ€Ğ¾Ğ²ĞºĞ°
+// ‚¢®¤ ª«îç  
+string inputKey() {
+    string key;
+    cout << "‚¢¥¤¨â¥ 3 ¡ãª¢ë ä ¬¨«¨¨ : ";
+    cin >> key;
+
+    // ¡à¥§ ¥¬ áâà®ªã, çâ®¡ë ®áâ ¢¨âì â®«ìª® ¯¥à¢ë¥ 3 á¨¬¢®« 
+    if (key.length() > 3) {
+        key = key.substr(0, 3);
+    }
+
+    return key;
+}
+
+//¨à ¬¨¤ «ì­ ï á®àâ¨à®¢ª 
 void heapify(record** indexArr, int size, int i)
 {
     int largest = i;
@@ -75,93 +170,190 @@ void heapSort(record** indexArr, int size)
     }
 }
 
-// Ğ’Ñ‹Ğ²Ğ¾Ğ´ Ğ½Ğ°Ñ‡Ğ°Ğ»ÑŒĞ½Ğ¾Ğ¹ Ğ»Ğ¸Ğ½Ğ¸Ğ¸
+// ”ã­ªæ¨ï ¤«ï áà ¢­¥­¨ï ¤¢ãå § ¯¨á¥© ¯® ä ¬¨«¨¨
+int compareByLastName(record* a, record* b) {
+    // // ˆ§¢«¥ª ¥¬ ä ¬¨«¨¨ ¨§ ”ˆ
+    // char* lastNameA = strtok(a->fullname, " ");
+    // char* lastNameB = strtok(b->fullname, " ");
+
+    // // ‘à ¢­¨¢ ¥¬ ä ¬¨«¨¨
+    return strcmp(a->fullname, b->fullname);
+}
+
+// ¨à ¬¨¤ «ì­ ï á®àâ¨à®¢ª  ¤«ï ä ¬¨«¨¨
+void heapifyLastName(record** arr, int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && compareByLastName(arr[left], arr[largest]) > 0)
+        largest = left;
+
+    if (right < n && compareByLastName(arr[right], arr[largest]) > 0)
+        largest = right;
+
+    if (largest != i) {
+        swap(arr[i], arr[largest]);
+        heapifyLastName(arr, n, largest);
+    }
+}
+
+void heapSortLastName(record** arr, int n) {
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapifyLastName(arr, n, i);
+
+    for (int i = n - 1; i > 0; i--) {
+        swap(arr[0], arr[i]);
+        heapifyLastName(arr, i, 0);
+    }
+}
+
+//‚ë¢®¤ ¬¥­î
+void printMenu() {
+    cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"
+         << "\n"
+         << "º                             Œ¥­î                             º"
+         << "\n"
+         << "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹"
+         << "\n"
+         << "º  1. ®á¬®âà¥âì ¡ §ã ¤ ­­ëå                                   º"
+         << "\n"
+         << "º  2. ®á¬®âà¥âì ®âá®àâ¨à®¢ ­­ãî ¡ §ã ¤ ­­ëå                   º"
+         << "\n"
+         << "º  3. ®¨áª ¯® ª«îçã                                           º"
+         << "\n"
+         << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼"
+         << "\n\n"
+         << ">>> ";
+}
+
+// ‚ë¢®¤ ­ ç «ì­®© «¨­¨¨
 void printStartLine()
 {
-    cout << "â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—"
+    cout << "ÉÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ»"
               << "\n"
-              << "â•‘\t\t   "
-              << "Ğ¤Ğ˜Ğ"
-              << "\t\t        â•‘       "
-              << "Ğ£Ğ»Ğ¸Ñ†Ğ°"
-              << "      â•‘    "
-              << "ĞĞ¾Ğ¼ĞµÑ€ Ğ´Ğ¾Ğ¼Ğ°"
-              << "   â•‘   "
-              << "ĞĞ¾Ğ¼ĞµÑ€ ĞºĞ²Ğ°Ñ€Ñ‚Ğ¸Ñ€Ñ‹"
-              << "   â•‘   "
-              << "Ğ”Ğ°Ñ‚Ğ° Ğ¿Ğ¾ÑĞµĞ»ĞµĞ½Ğ¸Ñ   â•‘" 
+              << "º\t\t   "
+              << "”ˆ"
+              << "\t\t        º       "
+              << "“«¨æ "
+              << "      º    "
+              << "®¬¥à ¤®¬ "
+              << "   º   "
+              << "®¬¥à ª¢ àâ¨àë"
+              << "   º   "
+              << "„ â  ¯®á¥«¥­¨ï   º" 
               << endl;
 }
 
+// ‚ë¢®¤ ª®­¥æ­®© «¨­¨¨
 void printEndLine()
 {
-    cout << "â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•" << "\n\n";
+    cout << "ÈÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼" << "\n\n";
 }
 
-// Ğ’Ñ‹Ğ²Ğ¾Ğ´ Ğ±Ğ°Ğ·Ñ‹ Ğ´Ğ°Ğ½Ğ½Ñ‹Ñ…
+// ‚ë¢®¤ ¡ §ë ¤ ­­ëå
 void printRecord(record* locality, int& currentPage)
 {
     for (int i = currentPage * 20; i < currentPage * 20 + 20; i++) {
-        cout << "â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£"
+        cout << "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹"
              << "\n"
-             << "â•‘"
+             << "º"
              << i + 1
              << ". "
              << locality[i].fullname
-             << "\tâ•‘ "
+             << "\tº "
              << locality[i].street
-             << "â•‘\t    " 
+             << "º\t    " 
              << locality[i].numberHouse
-             << "\t     â•‘\t       "
+             << "\t     º\t       "
              << locality[i].numberApartment
-             << "\t  â•‘      "
+             << "\t  º      "
              << locality[i].dateSettle 
-             << "     â•‘"
+             << "     º"
              << endl;
     }
 }
 
-// Ğ’Ñ‹Ğ²Ğ¾Ğ´ ÑĞ¾Ñ€Ñ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ½Ğ¾Ğ¹ Ğ±Ğ°Ğ·Ñ‹ Ğ´Ğ°Ğ½Ğ½Ñ‹Ñ…
+// ‚ë¢®¤ á®àâ¨à®¢ ­­®© ¡ §ë ¤ ­­ëå
 void printSortRecord(record** indexArr, int& currentPage)
 {
     for (int i = currentPage * 20; i < currentPage * 20 + 20; i++) {
-        cout << "â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•£"
+        cout << "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹"
              << "\n"
-             << "â•‘"
+             << "º"
              << i + 1
              << ". "
              << indexArr[i]->fullname
-             << "\tâ•‘ "
+             << "\tº "
              << indexArr[i]->street
-             << "â•‘\t    " 
+             << "º\t    " 
              << indexArr[i]->numberHouse
-             << "\t     â•‘\t       "
+             << "\t     º\t       "
              << indexArr[i]->numberApartment
-             << "\t  â•‘      "
+             << "\t  º      "
              << indexArr[i]->dateSettle
-             << "     â•‘"
+             << "     º"
              << endl;
     }
 }
 
-// Ğ’Ñ‹Ğ²Ğ¾Ğ´ Ğ¼ĞµĞ½Ñ ÑƒĞ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ñ
+// ‚ë¢®¤ ®ç¥à¥¤¨
+void printQueue(const MyQueue& result, int currentPage)
+{
+    node* currentNode = result.head;
+    int counter = 0;
+    int startIndex = currentPage * 20;
+    
+    // à®¯ãáª ¥¬ § ¯¨á¨, çâ®¡ë ­ ç âì á ­ã¦­®£® ¨­¤¥ªá  ­  â¥ªãé¥© áâà ­¨æ¥
+    while (counter < startIndex && currentNode) {
+        currentNode = currentNode->next;
+        counter++;
+    }
+
+    // ‚ë¢®¤¨¬ ¤® 20 § ¯¨á¥© ­  â¥ªãé¥© áâà ­¨æ¥
+    while (currentNode && counter < startIndex + 20) {
+        record* recordPtr = currentNode->data;
+        cout << "ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÎÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹"
+             << "\n"
+             << "º"
+             << counter + 1
+             << ". "
+             << recordPtr->fullname
+             << "\tº "
+             << recordPtr->street
+             << "º\t    "
+             << recordPtr->numberHouse
+             << "\t     º\t       "
+             << recordPtr->numberApartment
+             << "\t  º      "
+             << recordPtr->dateSettle
+             << "     º"
+             << endl;
+
+        currentNode = currentNode->next;
+        counter++;
+    }
+}
+
+// ‚ë¢®¤ ¬¥­î ã¯à ¢«¥­¨ï
 void printControlMenu()
 {
-    cout << "<q> : Ğ’Ñ‹Ğ¹Ñ‚Ğ¸ Ğ¸Ğ· Ğ¿Ñ€Ğ¾Ğ³Ñ€Ğ°Ğ¼Ğ¼Ñ‹"
+    cout << "<q> : ‚ë©â¨ ¨§ ¯à®£à ¬¬ë"
               << "\t\t    "
-              << "<h> : ĞŸÑ€ĞµĞ´Ñ‹Ğ´ÑƒÑ‰Ğ°Ñ ÑÑ‚Ñ€Ğ½Ğ¸Ñ†Ğ°"
+              << "<h> : à¥¤ë¤ãé ï áâà­¨æ "
               << "\t\t\t"
-              << "<l> : Ğ¡Ğ»ĞµĞ´ÑƒÑÑ‰Ğ°Ñ ÑÑ‚Ñ€Ğ°Ğ½Ğ¸Ñ†Ğ°" 
+              << "<l> : ‘«¥¤ãîé ï áâà ­¨æ " 
               << "\n"
-              << "<r> : ĞŸĞ¾Ğ¸ÑĞº Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸"
+              << "<r> : ®¨áª § ¯¨á¨"
               << "\t\t\t    "
-              << "<j> : ĞŸÑ€Ğ¾ÑˆĞ»Ñ‹Ğµ 10 Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹"
+              << "<j> : à®è«ë¥ 10 § ¯¨á¥©"
               << "\t\t\t"
-              << "<k> : Ğ¡Ğ»ĞµĞ´ÑƒÑÑ‰Ğ¸Ğµ 10 Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹" 
+              << "<k> : ‘«¥¤ãîé¨¥ 10 § ¯¨á¥©" 
               << endl;
 }
 
-bool checkKey(int& currentPage) {
+// à®¢¥àª  ª« ¢¨è ã¯à ¢«¥­¨ï
+bool checkKey(int& currentPage, int totalRecords) {
     char key = getch();
     bool flag = true;
     switch (key) {
@@ -174,35 +366,41 @@ bool checkKey(int& currentPage) {
             if (currentPage < 0) currentPage = 0;
             break;
         case 'l':
-            currentPage++;
-            if (currentPage > 199) currentPage = 199;
+            if ((currentPage + 1) * 20 < totalRecords) {
+                currentPage++;
+            }
             break;
-        case 'r' :
+        case 'r':
             int numberPage;
-            cout << "Ğ’Ğ²ĞµĞ´Ğ¸Ñ‚Ğµ Ğ½Ğ¾Ğ¼ĞµÑ€ Ğ·Ğ°Ğ¿Ğ¸ÑĞ¸ : ";
+            cout << "‚¢¥¤¨â¥ ­®¬¥à § ¯¨á¨ : ";
             cin >> numberPage;
-            if (numberPage > 0 && numberPage <= 4000) currentPage = floor((numberPage - 1) / 20);
-            else {
-                cout << "ĞÑˆĞ¸Ğ±ĞºĞ°!" << endl;
+            if (numberPage > 0 && numberPage <= totalRecords) {
+                currentPage = floor((numberPage - 1) / 20);
+            } else {
+                cout << "è¨¡ª !" << endl;
                 sleep(1);
-            } 
+            }
             break;
-        case 'j' :
+        case 'j':
             currentPage -= 10; 
             if (currentPage < 0) currentPage = 0;
             break;
-        case 'k' :
+        case 'k':
             currentPage += 10; 
-            if (currentPage > 199) currentPage = 199;
+            if (currentPage * 20 >= totalRecords) {
+                currentPage = (totalRecords - 1) / 20;
+            }
             break;
     }
 
     return flag;
 }
 
-void checkKeyMenu(record* locality, record** indexArr, int& currentPage) 
+// à®¢¥àª  ª« ¢¨è ¬¥­î
+void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName, int& currentPage) 
 {
     printMenu();
+    string targetKey;
     char key = getch();
     bool flag = true;
     currentPage = 0;
@@ -214,21 +412,39 @@ void checkKeyMenu(record* locality, record** indexArr, int& currentPage)
                 printRecord(locality, currentPage);
                 printEndLine();
                 printControlMenu();
-                flag = checkKey(currentPage);
+                flag = checkKey(currentPage, 4000);
             }
             break;
-        case '2' :
-            heapSort(indexArr, 4000);
+        case '2':
             while(flag) {
                 system("cls");
                 printStartLine();
                 printSortRecord(indexArr, currentPage);
                 printEndLine();
                 printControlMenu();
-                flag = checkKey(currentPage);  
+                flag = checkKey(currentPage, 4000);  
             }
             break;
-        case 'q':
+        case '3':
+            system("cls");
+            targetKey = inputKey();
+            while (flag) {
+            MyQueue result = BinarySearch(indexArrLastName, targetKey);
+                if (result.empty()) {
+                    std::cout << "‡ ¯¨á¨ á ª«îç®¬ " << targetKey << " ­¥ ­ ©¤¥­ë." << std::endl;
+                    sleep(3);
+                    break;
+                } else {
+                    system("cls");
+                    printStartLine();
+                    printQueue(result, currentPage);
+                    printEndLine();
+                    printControlMenu();
+                    flag = checkKey(currentPage, result.size());
+                }
+            }
+            break;
+        default:
             exit(0);
             break;
     }
@@ -242,23 +458,32 @@ int main()
     int currentPage = 0;
     
     record* locality = new record[sizeLocality]; 
-   
-    record** indexArr = new record*[sizeLocality];
-    for (int i = 0; i < sizeLocality; i++) {
-        indexArr[i] = &locality[i];
-    }
 
     ifstream fileDateBase("testBase4.dat", ios::binary);
 
     if (!fileDateBase) {
-        cout << "ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¾Ñ‚ĞºÑ€Ñ‹Ñ‚ÑŒ Ñ„Ğ°Ğ¹Ğ»!" << endl;
+        cout << "¥ ã¤ «®áì ®âªàëâì ä ©«!" << endl;
         return 1;
     }
 
     for (int i = 0; !fileDateBase.read((char*)&locality[i], sizeof(record)).eof(); i++);
+    
+    // ˆ­¤¥ªá­ë© ¬ áá¨¢ ¤«ï á®àâ¨à®¢ª¨ ¯® ã«¨æ¥ ¨ ­®¬¥àã ¤®¬ 
+    record** indexArr = new record*[sizeLocality];
+    for (int i = 0; i < sizeLocality; i++) {
+        indexArr[i] = &locality[i];
+    }
+    heapSort(indexArr, sizeLocality);
+
+    // ˆ­¤¥ªá­ë© ¬ áá¨¢ ¤«ï á®àâ¨à®¢ª¨ ¯® ä ¬¨«¨¨
+    record** indexArrLastName = new record*[sizeLocality];
+    for (int i = 0; i < sizeLocality; i++) {
+        indexArrLastName[i] = &locality[i];
+    }
+    heapSortLastName(indexArrLastName, sizeLocality);
 
     while(true) {
-        checkKeyMenu(locality, indexArr, currentPage);
+        checkKeyMenu(locality, indexArr, indexArrLastName, currentPage);
         system("cls");
     }
 
