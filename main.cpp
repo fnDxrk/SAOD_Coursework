@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <vector>
 #include <cstring>
 #include <cmath>
 #include <stdio.h>
@@ -7,6 +8,8 @@
 #include <unistd.h>
 
 using namespace std;
+
+const int MAX_KEYS = 2; // Максимальное количество ключей в узле
 
 struct record {
     char fullname[32];
@@ -136,6 +139,132 @@ string inputKey() {
     return key;
 }
 
+struct BTreeNode {
+    vector<record*> keys; // Список указателей на записи в узле
+    vector<BTreeNode*> children; // Список указателей на потомков
+
+    BTreeNode(bool isLeaf = true) : isLeaf(isLeaf) {}
+
+    bool isLeaf; // Признак листового узла
+};
+
+class BTree {
+public:
+    BTree(int maxKeys) : MAX_KEYS(maxKeys), root(new BTreeNode()) {}
+
+    void buildTreeFromQueue(MyQueue& queue) {
+        while (!queue.empty()) {
+            record* rec = queue.front();
+            queue.pop();
+            insert(rec);
+        }
+    }
+
+    void insert(record* rec) {
+        insertNonFull(root, rec);
+    }
+
+    void search(int targetApartment, vector<record*>& result) {
+        searchInNode(root, targetApartment, result);
+    }
+    void printBTree() const {
+        if (root) {
+            printBTreeNode(root, 0);
+        } else {
+            cout << "B-дерево пусто." << endl;
+        }
+    }
+    void insertFromQueue(MyQueue& queue) {
+        while (!queue.empty()) {
+            record* tempData = queue.front();
+            //cout << "Добавляю запись в дерево: " << tempData->fullname << endl; // Отладочный вывод
+            queue.pop();
+            insert(tempData);
+        }
+    }
+
+private:
+    const int MAX_KEYS; // Максимальное количество ключей в узле
+    BTreeNode* root; // Корневой узел дерева
+
+    void printBTreeNode(BTreeNode* node, int indent) const {
+        if (node) {
+            // Выводим правое поддерево с отступом
+            printBTreeNode(node->children.back(), indent + 4);
+            // Выводим ключи в текущем узле
+            for (const auto& key : node->keys) {
+                cout << string(indent, ' ') << key->fullname << endl;
+            }
+            // Выводим левое поддерево с отступом
+            printBTreeNode(node->children.front(), indent + 4);
+        }
+    }
+    // Вставка записи в не полный узел
+    void insertNonFull(BTreeNode* x, record* rec) {
+        // Выводим информацию о вставляемой записи
+        cout << "Inserting record: " << rec->fullname << " Apartment: " << rec->numberApartment << endl;
+        
+        // Выводим ключи в узле перед вставкой
+        cout << "Keys in node before insertion: ";
+        for (const auto& key : x->keys) {
+            cout << key->fullname << " ";
+        }
+        cout << endl;
+
+        // Вставляем запись в узел
+
+        // Выводим ключи в узле после вставки
+        cout << "Keys in node after insertion: ";
+        for (const auto& key : x->keys) {
+            cout << key->fullname << " ";
+        }
+        cout << endl;
+    }
+
+
+    // Разделение узла
+    void splitChild(BTreeNode* x, int i) {
+        BTreeNode* y = x->children[i];
+        BTreeNode* z = new BTreeNode(y->isLeaf);
+
+        x->keys.insert(x->keys.begin() + i, y->keys[MAX_KEYS / 2]);
+
+        for (int j = MAX_KEYS / 2 + 1; j < MAX_KEYS; j++) {
+            z->keys.push_back(y->keys[j]);
+        }
+
+        y->keys.erase(y->keys.begin() + MAX_KEYS / 2, y->keys.end());
+
+        if (!y->isLeaf) {
+            for (int j = MAX_KEYS / 2 + 1; j <= MAX_KEYS; j++) {
+                z->children.push_back(y->children[j]);
+            }
+
+            y->children.erase(y->children.begin() + MAX_KEYS / 2 + 1, y->children.end());
+        }
+
+        x->children.insert(x->children.begin() + i + 1, z);
+    }
+
+    // Поиск в узле
+    void searchInNode(BTreeNode* x, int targetApartment, vector<record*>& result) {
+        int i = 0;
+        while (i < x->keys.size() && targetApartment > x->keys[i]->numberApartment) {
+            i++;
+        }
+
+        if (i < x->keys.size() && targetApartment == x->keys[i]->numberApartment) {
+            result.push_back(x->keys[i]);
+        }
+
+        if (!x->isLeaf) {
+            for (int j = 0; j < x->children.size(); j++) {
+                searchInNode(x->children[j], targetApartment, result);
+            }
+        }
+    }
+};
+
 //Пирамидальная сортировка
 void heapify(record** indexArr, int size, int i)
 {
@@ -221,6 +350,8 @@ void printMenu() {
          << "║  2. Посмотреть отсортированную базу данных                   ║"
          << "\n"
          << "║  3. Поиск по ключу                                           ║"
+         << "\n"
+         << "║  4. Вывести двоичное бинарное дерево поиска                  ║"
          << "\n"
          << "╚══════════════════════════════════════════════════════════════╝"
          << "\n\n"
@@ -397,7 +528,7 @@ bool checkKey(int& currentPage, int totalRecords) {
 }
 
 // Проверка клавиш меню
-void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName, int& currentPage) 
+void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName, int& currentPage, MyQueue& result, BTree& bTree)
 {
     printMenu();
     string targetKey;
@@ -429,7 +560,7 @@ void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName
             system("cls");
             targetKey = inputKey();
             while (flag) {
-            MyQueue result = BinarySearch(indexArrLastName, targetKey);
+                result = BinarySearch(indexArrLastName, targetKey);
                 if (result.empty()) {
                     std::cout << "Записи с ключом " << targetKey << " не найдены." << std::endl;
                     sleep(3);
@@ -444,7 +575,19 @@ void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName
                 }
             }
             break;
-        default:
+        case '4':
+            system("cls");
+            if (!result.empty()) {
+                bTree.insertFromQueue(result);
+                sleep(5);
+                cout << "B-дерево:" << endl;
+                bTree.printBTree();
+            } else {
+                cout << "Очередь пуста. Добавьте записи в очередь в случае 3 перед просмотром B-дерева." << endl;
+                sleep(3);
+            }
+            break;
+        default :
             exit(0);
             break;
     }
@@ -453,6 +596,7 @@ void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName
 int main()
 {    
     system("chcp 866 > nul");
+    system("cls");
     
     int sizeLocality = 4000;
     int currentPage = 0;
@@ -482,10 +626,18 @@ int main()
     }
     heapSortLastName(indexArrLastName, sizeLocality);
 
+    MyQueue recordQ;
+
+    BTree bTree(MAX_KEYS);
+
     while(true) {
-        checkKeyMenu(locality, indexArr, indexArrLastName, currentPage);
+        checkKeyMenu(locality, indexArr, indexArrLastName, currentPage, recordQ, bTree);
         system("cls");
     }
+
+    delete[] locality;
+    delete[] indexArr;
+    delete[] indexArrLastName;
 
     fileDateBase.close();
 
