@@ -138,23 +138,24 @@ string inputKey() {
 }
 
 struct BTree {
-    MyQueue data;
+    vector<MyQueue> data;
     int balance;
     BTree* left;
     BTree* right;
 };
 
-void InsertInBTree(const MyQueue& data, BTree*& root, bool& VR, bool& HR) {
+void InsertInBTree(MyQueue& data, BTree*& root, bool& VR, bool& HR)
+{
     if (root == nullptr) {
         root = new BTree;
-        root->data = data; 
+        root->data.push_back(data);
         root->balance = 0;
         root->left = nullptr;
         root->right = nullptr;
         VR = false;
         HR = false;
     } else {
-        if (data.front()->numberApartment < root->data.front()->numberApartment) {
+        if (data.front()->numberApartment < root->data.front().head->data->numberApartment) {
             InsertInBTree(data, root->left, VR, HR);
             if (VR) {
                 if (root->balance == 0) {
@@ -165,20 +166,24 @@ void InsertInBTree(const MyQueue& data, BTree*& root, bool& VR, bool& HR) {
                     q->balance = 1;
                     VR = false;
                     HR = true;
-                } else {
+                }
+                else {
                     root->balance = 0;
                     HR = true;
                 }
-            } else {
+            }
+            else {
                 HR = false;
             }
-        } else if (data.front()->numberApartment > root->data.front()->numberApartment) {
+        }
+        else if (data.front()->numberApartment > root->data.front().head->data->numberApartment) {
             InsertInBTree(data, root->right, VR, HR);
             if (VR) {
                 root->balance = 1;
                 VR = false;
                 HR = true;
-            } else if (HR) {
+            }
+            else if (HR) {
                 if (root->balance > 0) {
                     BTree* q = root->right;
                     root->right = q->left;
@@ -189,12 +194,17 @@ void InsertInBTree(const MyQueue& data, BTree*& root, bool& VR, bool& HR) {
                     root = q;
                     VR = true;
                     HR = false;
-                } else {
+                }
+                else {
                     HR = false;
                 }
-            } else {
+            }
+            else {
                 HR = false;
             }
+        }
+        else {
+            root->data.push_back(data);
         }
     }
 }
@@ -205,7 +215,18 @@ void InOrderTraversal(BTree* root) {
     }
 
     InOrderTraversal(root->left);
-    cout << root->data.front()->numberApartment << endl;
+    for (size_t i = 0; i < root->data.size(); i++) {
+        cout << root->data[i].head->data->fullname
+                  << "\t"
+                  << root->data[i].head->data->street
+                  << "\t"
+                  << root->data[i].head->data->numberHouse
+                  << "\t\t"
+                  << root->data[i].head->data->numberApartment
+                  << "\t\t"
+                  << root->data[i].head->data->dateSettle
+                  << endl;
+    }
     InOrderTraversal(root->right);
 }
 
@@ -471,6 +492,64 @@ bool checkKey(int& currentPage, int totalRecords) {
     return flag;
 }
 
+short int numTree() {
+    system("cls");
+    short int num = 0;
+    cout << "Введите номер квартиры : ";
+    cin >> num; 
+
+    return num;
+}
+
+void printTreeKey(BTree* root, int num) {
+    if (root == nullptr) {
+        return;
+    }
+
+    printTreeKey(root->left, num);
+    for (size_t i = 0; i < root->data.size(); i++) {
+        if (root->data[i].head->data->numberApartment == num) {
+            cout << root->data[i].head->data->fullname 
+                 << "\t"
+                 << root->data[i].head->data->street
+                 << "\t"
+                 << root->data[i].head->data->numberHouse 
+                 << "\t\t "
+                 << root->data[i].head->data->numberApartment 
+                 << "\t\t "
+                 << root->data[i].head->data->dateSettle 
+                 << endl;
+        }
+    }
+    printTreeKey(root->right, num);
+}
+
+bool checkKeyTree(BTree* root) {
+    char key = getch();
+    bool flag = true;
+    short int num = numTree();
+    switch (key) {
+        case 'q' :
+            system("cls");
+            flag = false;
+            break;
+        case 'r' :
+            system("cls");
+            printTreeKey(root, num);
+            system("pause");
+            break;
+    }
+
+    return flag;
+}
+
+void printControlMenuTree() {
+    cout << "<q> : Выйти из программы" 
+         << "\t"
+         << "<r> : Поиск по ключу"
+         << endl;
+}
+
 // Проверка клавиш меню
 void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName, int& currentPage, MyQueue& result, BTree*& root)
 {
@@ -523,29 +602,23 @@ void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName
             }
             break;
         case '4':
-            root = nullptr;
-            // while (!result.empty()) {
-            //     record* item = result.front();
-            //     //cout << result.front()->fullname << endl;
-            //     tempQueue.push(item);
-            //     result.pop();
-            // }
-            // while (!tempQueue.empty()) {
-            //     record* item = tempQueue.front();
-            //     //cout << tempQueue.front()->fullname << endl;
-            //     result.push(item);
-            //     InsertInBTree(tempQueue, root, VR, HR);
-            //     tempQueue.pop();
-            // }
-            // InOrderTraversal(root);
-            // sleep(5);
-            while(!(result.head == nullptr)) {
-                //cout << result.front()->fullname << endl;
-                InsertInBTree(result, root, VR, HR);
-                result.head = result.head->next;
+            if(!result.empty()) {
+                root = nullptr;
+                while(!(result.head == nullptr)) {
+                    InsertInBTree(result, root, VR, HR);
+                    result.head = result.head->next;
+                }
+                while(flag) {
+                    system("cls");
+                    InOrderTraversal(root);
+                    cout << endl;
+                    printControlMenuTree();
+                    flag = checkKeyTree(root);
+                }
+            } else {
+                cout << "Очередь пустая! Сделайте сначала пункт 3!";
+                sleep(5);
             }
-            InOrderTraversal(root);
-            sleep(5);
             break;
         default :
             exit(0);
