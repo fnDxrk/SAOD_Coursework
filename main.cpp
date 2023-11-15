@@ -3,6 +3,8 @@
 #include <vector>
 #include <cstring>
 #include <cmath>
+#include <algorithm>
+#include <unordered_map>
 #include <stdio.h>
 #include <conio.h>
 #include <unistd.h>
@@ -22,6 +24,8 @@ struct record {
     short int numberApartment;
     char dateSettle[10];
 };
+
+const int N = 4000;
 
 // Структура узла
 struct node {
@@ -318,6 +322,8 @@ void printMenu() {
          << "\n"
          << "║  4. Вывод двоичного B-дерева поиска                          ║"
          << "\n"
+         << "║  5. Кодирование                                              ║"
+         << "\n"
          << "╚══════════════════════════════════════════════════════════════╝"
          << "\n\n"
          << ">>> ";
@@ -527,13 +533,14 @@ void printTreeKey(BTree* root, int num) {
 bool checkKeyTree(BTree* root) {
     char key = getch();
     bool flag = true;
-    short int num = numTree();
+    short int num;
     switch (key) {
         case 'q' :
             system("cls");
             flag = false;
             break;
         case 'r' :
+            num = numTree();
             system("cls");
             printTreeKey(root, num);
             system("pause");
@@ -548,6 +555,134 @@ void printControlMenuTree() {
          << "\t"
          << "<r> : Поиск по ключу"
          << endl;
+}
+
+int up(int n, double q, double *array, double chance[]) {
+    int i = 0, j = 0;
+    for (i = n - 2; i >= 1; i--) {
+        if (array[i - 1] < q) array[i] = array[i - 1];
+        else {
+            j = i;
+            break;
+        }
+        if ((i - 1) == 0 && chance[i - 1] < q) {
+            j = 0;
+            break;
+        }
+    }
+    array[j] = q;
+    return j;
+}
+
+void down(int n, int j, int Length[], char c[][20]) {
+    char pref[20];
+    for (int i = 0; i < 20; i++) pref[i] = c[j][i];
+    int l = Length[j];
+    for (int i = j; i < n - 2; i++) {
+        for (int k = 0; k < 20; k++)
+            c[i][k] = c[i+1][k];
+        Length[i] = Length[i+1];
+    }
+    for (int i = 0; i < 20; i++) {
+        c[n-2][i] = pref[i];
+        c[n-1][i] = pref[i];
+    }
+    c[n-1][l] = '1';
+    c[n-2][l] = '0';
+    Length[n-1] = l + 1;
+    Length[n-2] = l + 1;
+}
+
+void huffman(int n, double *array, int Length[], char c[][20], double chance[]) {
+    if (n == 2) {
+        c[0][0] = '0';
+        Length[0] = 1;
+        c[1][0] = '1';
+        Length[1] = 1;
+    } else {
+        double q = array[n - 2] + array[n - 1];
+        int j = up(n, q, array, chance);
+        huffman(n - 1, array, Length, c, chance);
+        down(n, j, Length, c);
+    }
+}
+
+unordered_map<char, int> get_char_counts_from_file(const string &file_name, int &file_size, int n = N) {
+    ifstream file(file_name, ios::binary);
+    if (!file.is_open()) {
+        throw runtime_error("Не удалось открыть файл!");
+    }
+    char ch_arr[sizeof(record) * n];
+    file.read((char *) ch_arr, sizeof(record) * n);
+    file.close();
+
+    unordered_map<char, int> counter_map;
+    file_size = 0;
+    for (auto ch : ch_arr) {
+        counter_map[ch]++;
+        file_size++;
+    }
+    return counter_map;
+}
+
+vector<pair<double, char>> calc_probabilities(const unordered_map<char, int> &counter_map, int count) {
+    vector<pair<double, char>> probabilities;
+    probabilities.reserve(counter_map.size());
+    for (auto i : counter_map) {
+        probabilities.emplace_back(make_pair((double) i.second / count, i.first));
+    }
+    return probabilities;
+}
+
+void coding() {
+    int file_size;
+    unordered_map<char, int> counter_map;
+    counter_map = get_char_counts_from_file("testBase4.dat", file_size);
+
+    auto probabilities = calc_probabilities(counter_map, file_size);
+    counter_map.clear();
+
+    sort(probabilities.begin(), probabilities.end(), greater<pair<double, char>>());
+    cout << "\nProbabil.  Сhar\n";
+    for (auto i : probabilities) {
+        cout << fixed << i.first << " | " << i.second << '\n';
+    }
+
+    const int n = (int) probabilities.size();
+
+    char c[n][20];
+    int Length[n];
+    for (auto &i : Length) {
+        i = 0;
+    }
+
+    auto p = new double[n];
+    double chance_l[n];
+    for (int i = 0; i < n; ++i) {
+        p[i] = probabilities[i].first;
+        chance_l[i] = p[i];
+
+    }
+
+    huffman(n, chance_l, Length, c, p);
+    cout << "\nКод Хаффмена:\n";
+    cout << "\nCh  Prob      Code\n";
+    double avg_len = 0;
+    double entropy = 0;
+    for (int i = 0; i < n; i++) {
+        avg_len += Length[i] * p[i];
+        entropy -= p[i] * log2(p[i]);
+        printf("%c | %.5lf | ", probabilities[i].second, p[i]);
+        for (int j = 0; j < Length[i]; ++j) {
+            printf("%c", c[i][j]);
+        }
+        cout << '\n';
+    }
+    cout << "\n"
+         << "Средняя длина = " << avg_len << '\n'
+         << "Энтропия = " << entropy << '\n'
+         << "Средняя длина < энтропии + 1\n"
+         << "N = " << n << "\n\n";
 }
 
 // Проверка клавиш меню
@@ -619,6 +754,17 @@ void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName
                 cout << "Очередь пустая! Сделайте сначала пункт 3!";
                 sleep(5);
             }
+            break;
+        case '5':
+            while(flag) {
+                coding();
+                cout << "\n\n<q> : Выйти из программы" << endl;
+                if (getch() == 'q') {
+                    system("cls");
+                    flag = false;
+                }
+            }
+            //sleep(10);
             break;
         default :
             exit(0);
