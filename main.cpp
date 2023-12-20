@@ -96,7 +96,7 @@ MyQueue BinarySearch(record** indexArr, const string& targetKey) {
         int mid = (left + right) / 2;
         
         // Извлекаем ключ из фамилии
-        string key(indexArr[mid]->fullname, 3);
+        string key(indexArr[mid]->street, 3);
 
         if (key == targetKey) {
             // Если ключ совпадает, добавляем запись в очередь
@@ -104,14 +104,14 @@ MyQueue BinarySearch(record** indexArr, const string& targetKey) {
             
             // Поиск всех записей с таким же ключом влево
             int leftIndex = mid - 1; // Изменено значение
-            while (leftIndex >= 0 && strncmp(indexArr[leftIndex]->fullname, targetKey.c_str(), 3) == 0) { // Исправлено сравнение
+            while (leftIndex >= 0 && strncmp(indexArr[leftIndex]->street, targetKey.c_str(), 3) == 0) {
                 result.push(indexArr[leftIndex]);
                 leftIndex--;
             }
             
             // Поиск всех записей с таким же ключом вправо
             int rightIndex = mid + 1; // Изменено значение
-            while (rightIndex < arrSize && strncmp(indexArr[rightIndex]->fullname, targetKey.c_str(), 3) == 0) { // Исправлено сравнение
+            while (rightIndex < arrSize && strncmp(indexArr[rightIndex]->street, targetKey.c_str(), 3) == 0) {
                 result.push(indexArr[rightIndex]);
                 rightIndex++;
             }
@@ -130,10 +130,9 @@ MyQueue BinarySearch(record** indexArr, const string& targetKey) {
 // Ввод ключа 
 string inputKey() {
     string key;
-    cout << "Введите 3 буквы фамилии : ";
+    cout << "Введите 3 буквы улицы : ";
     cin >> key;
 
-    // Обрезаем строку, чтобы оставить только первые 3 символа
     if (key.length() > 3) {
         key = key.substr(0, 3);
     }
@@ -268,41 +267,36 @@ void heapSort(record** indexArr, int size)
     }
 }
 
-// Функция для сравнения двух записей по фамилии
-int compareByLastName(record* a, record* b) {
-    // // Извлекаем фамилии из ФИО
-    // char* lastNameA = strtok(a->fullname, " ");
-    // char* lastNameB = strtok(b->fullname, " ");
-
-    // // Сравниваем фамилии
-    return strcmp(a->fullname, b->fullname);
+// Функция для сравнения двух записей по улице
+int compareByStreet(record* a, record* b) {
+    return strcmp(a->street, b->street);
 }
 
-// Пирамидальная сортировка для фамилии
-void heapifyLastName(record** arr, int n, int i) {
+// Пирамидальная сортировка для улицы
+void heapifyStreet(record** arr, int n, int i) {
     int largest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
 
-    if (left < n && compareByLastName(arr[left], arr[largest]) > 0)
+    if (left < n && compareByStreet(arr[left], arr[largest]) > 0)
         largest = left;
 
-    if (right < n && compareByLastName(arr[right], arr[largest]) > 0)
+    if (right < n && compareByStreet(arr[right], arr[largest]) > 0)
         largest = right;
 
     if (largest != i) {
         swap(arr[i], arr[largest]);
-        heapifyLastName(arr, n, largest);
+        heapifyStreet(arr, n, largest);
     }
 }
 
-void heapSortLastName(record** arr, int n) {
+void heapSortStreet(record** arr, int n) {
     for (int i = n / 2 - 1; i >= 0; i--)
-        heapifyLastName(arr, n, i);
+        heapifyStreet(arr, n, i);
 
     for (int i = n - 1; i > 0; i--) {
         swap(arr[0], arr[i]);
-        heapifyLastName(arr, i, 0);
+        heapifyStreet(arr, i, 0);
     }
 }
 
@@ -686,7 +680,7 @@ void coding() {
 }
 
 // Проверка клавиш меню
-void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName, int& currentPage, MyQueue& result, BTree*& root)
+void checkKeyMenu(record* locality, record** indexArr, record** indexArrStreet, int& currentPage, MyQueue& result, BTree*& root)
 {
     printMenu();
     string targetKey;
@@ -721,7 +715,7 @@ void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName
             system("cls");
             targetKey = inputKey();
             while (flag) {
-                result = BinarySearch(indexArrLastName, targetKey);
+                result = BinarySearch(indexArrStreet, targetKey);
                 if (result.empty()) {
                     std::cout << "Записи с ключом " << targetKey << " не найдены." << std::endl;
                     sleep(3);
@@ -757,6 +751,7 @@ void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName
             break;
         case '5':
             while(flag) {
+                system("cls");
                 coding();
                 cout << "\n\n<q> : Выйти из программы" << endl;
                 if (getch() == 'q') {
@@ -764,7 +759,6 @@ void checkKeyMenu(record* locality, record** indexArr, record** indexArrLastName
                     flag = false;
                 }
             }
-            //sleep(10);
             break;
         default :
             exit(0);
@@ -777,10 +771,9 @@ int main()
     system("chcp 866 > nul");
     system("cls");
     
-    int sizeLocality = 4000;
     int currentPage = 0;
     
-    record* locality = new record[sizeLocality]; 
+    record* locality = new record[N]; 
 
     ifstream fileDateBase("testBase4.dat", ios::binary);
 
@@ -792,30 +785,30 @@ int main()
     for (int i = 0; !fileDateBase.read((char*)&locality[i], sizeof(record)).eof(); i++);
     
     // Индексный массив для сортировки по улице и номеру дома
-    record** indexArr = new record*[sizeLocality];
-    for (int i = 0; i < sizeLocality; i++) {
+    record** indexArr = new record*[N];
+    for (int i = 0; i < N; i++) {
         indexArr[i] = &locality[i];
     }
-    heapSort(indexArr, sizeLocality);
+    heapSort(indexArr, N);
 
-    // Индексный массив для сортировки по фамилии
-    record** indexArrLastName = new record*[sizeLocality];
-    for (int i = 0; i < sizeLocality; i++) {
-        indexArrLastName[i] = &locality[i];
+    // Индексный массив для сортировки по улице
+    record** indexArrStreet = new record*[N];
+    for (int i = 0; i < N; i++) {
+        indexArrStreet[i] = &locality[i];
     }
-    heapSortLastName(indexArrLastName, sizeLocality);
+    heapSortStreet(indexArrStreet, N);
 
     MyQueue recordQ;
     BTree* root;
 
     while(true) {
-        checkKeyMenu(locality, indexArr, indexArrLastName, currentPage, recordQ, root);
+        checkKeyMenu(locality, indexArr, indexArrStreet, currentPage, recordQ, root);
         system("cls");
     }
 
     delete[] locality;
     delete[] indexArr;
-    delete[] indexArrLastName;
+    delete[] indexArrStreet;
 
     fileDateBase.close();
 
